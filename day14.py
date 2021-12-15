@@ -2,29 +2,35 @@
 Day 14
 """
 
-import copy
-
-import numpy as np
+from collections import Counter
 
 with open('data/day14.txt', 'r') as f:
     template, lines = f.read().split('\n\n')
 
 rules = {line.split(' -> ')[0]: line.split(' -> ')[1] for line in
          lines.split('\n')}
-template = list(template)
+pairs = Counter()
+for i in range(len(template) - 1):
+    if template[i:i + 2] not in pairs.keys():
+        pairs[template[i:i + 2]] = 1
+    else:
+        pairs[template[i:i + 2]] += 1
 
 for cur_step in range(40):
 
-    counter = 0
-    new_template = copy.copy(template)
-
-    for i in range(len(new_template) - 1):
-        pair = f'{new_template[i]}{new_template[i + 1]}'
+    for pair, count in zip(list(pairs.keys()), list(pairs.values())):
 
         if pair in rules.keys():
-            template.insert(i + 1 + counter, rules[pair])
-            counter += 1
+            pairs[pair] -= count
+            new1 = pair[0] + rules[pair]
+            new2 = rules[pair] + pair[1]
+
+            pairs[new1] += count
+            pairs[new2] += count
 
     if cur_step + 1 in [10, 40]:
-        elements, counts = np.unique(template, return_counts=True)
-        print(max(counts) - min(counts))
+        total = Counter()
+        for key, val in pairs.items():
+            total[key[1]] += val
+        total[template[0]] += 1
+        print(max(total.values()) - min(total.values()))
